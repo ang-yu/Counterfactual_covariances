@@ -67,18 +67,41 @@ data$income14_per_log <- log(data$income14_per+1000)
 data$income16_per_log <- log(data$income16_per+1000)
 data$income18_per_log <- log(data$income18_per+1000)
 
+# get percentile rank
+data$income79_per_rank <- percent_rank(data$income79_per)
+data$income80_per_rank <- percent_rank(data$income80_per)
+data$income81_per_rank <- percent_rank(data$income81_per)
+data$income82_per_rank <- percent_rank(data$income82_per)
+data$income83_per_rank <- percent_rank(data$income83_per)
+data$income84_per_rank <- percent_rank(data$income84_per)
+
+data$income08_per_rank <- percent_rank(data$income08_per)
+data$income10_per_rank <- percent_rank(data$income10_per)
+data$income12_per_rank <- percent_rank(data$income12_per)
+data$income14_per_rank <- percent_rank(data$income14_per)
+data$income16_per_rank <- percent_rank(data$income16_per)
+data$income18_per_rank <- percent_rank(data$income18_per)
+
 ## parental income measures
 # For 17 year olds in 1979, I use data from 1979, 1980, 1981 to capture family income at age 16, 17, 18
 # For 16 year olds in 1979, I use data from 1980, 1981, 1982 to capture family income at age 16, 17, 18
 # For 15 year olds in 1979, I use data from 1981, 1982, 1983 to capture family income at age 16, 17, 18
 # For 14 year olds in 1979, I use data from 1982, 1983, 1984 to capture family income at age 16, 17, 18
-data$parental_income <- NA
-data$parental_income[data$AGEATINT_1979==17] <- rowMeans(data[data$AGEATINT_1979==17,c("income79_per_log","income80_per_log","income81_per_log")], na.rm = T)
-data$parental_income[data$AGEATINT_1979==16] <- rowMeans(data[data$AGEATINT_1979==16,c("income80_per_log","income81_per_log","income82_per_log")], na.rm = T)
-data$parental_income[data$AGEATINT_1979==15] <- rowMeans(data[data$AGEATINT_1979==15,c("income81_per_log","income82_per_log","income83_per_log")], na.rm = T)
-data$parental_income[data$AGEATINT_1979==14] <- rowMeans(data[data$AGEATINT_1979==14,c("income82_per_log","income83_per_log","income84_per_log")], na.rm = T)
-data$parental_income[is.nan(data$parental_income)] <- NA # recode NaN to NA. Nothing worrisome. 
-summary(data$parental_income)
+data$parental_income_log <- NA
+data$parental_income_log[data$AGEATINT_1979==17] <- rowMeans(data[data$AGEATINT_1979==17,c("income79_per_log","income80_per_log","income81_per_log")], na.rm = T)
+data$parental_income_log[data$AGEATINT_1979==16] <- rowMeans(data[data$AGEATINT_1979==16,c("income80_per_log","income81_per_log","income82_per_log")], na.rm = T)
+data$parental_income_log[data$AGEATINT_1979==15] <- rowMeans(data[data$AGEATINT_1979==15,c("income81_per_log","income82_per_log","income83_per_log")], na.rm = T)
+data$parental_income_log[data$AGEATINT_1979==14] <- rowMeans(data[data$AGEATINT_1979==14,c("income82_per_log","income83_per_log","income84_per_log")], na.rm = T)
+data$parental_income_log[is.nan(data$parental_income_log)] <- NA # recode NaN to NA. Nothing worrisome. 
+summary(data$parental_income_log)
+
+data$parental_income_rank <- NA
+data$parental_income_rank[data$AGEATINT_1979==17] <- rowMeans(data[data$AGEATINT_1979==17,c("income79_per_rank","income80_per_rank","income81_per_rank")], na.rm = T)
+data$parental_income_rank[data$AGEATINT_1979==16] <- rowMeans(data[data$AGEATINT_1979==16,c("income80_per_rank","income81_per_rank","income82_per_rank")], na.rm = T)
+data$parental_income_rank[data$AGEATINT_1979==15] <- rowMeans(data[data$AGEATINT_1979==15,c("income81_per_rank","income82_per_rank","income83_per_rank")], na.rm = T)
+data$parental_income_rank[data$AGEATINT_1979==14] <- rowMeans(data[data$AGEATINT_1979==14,c("income82_per_rank","income83_per_rank","income84_per_rank")], na.rm = T)
+data$parental_income_rank[is.nan(data$parental_income_rank)] <- NA # recode NaN to NA. Nothing worrisome. 
+summary(data$parental_income_rank)
 
 ## income destination measures
 # I focus on family income from age 44 to age 53. Note that survey year reflects income in the previous year
@@ -86,14 +109,24 @@ summary(data$parental_income)
 # For 16 year olds in 1979, I use data from 2008, 2010, 2012, 2014, 2016 to capture family income at age 44, 46, 48, 50, 52.
 # For 15 year olds in 1979, I use data from 2010, 2012, 2014, 2016, 2018 to capture family income at age 45, 47, 49, 51, 53.
 # For 14 year olds in 1979, I use data from 2010, 2012, 2014, 2016, 2018 to capture family income at age 44, 46, 48, 50, 52.
-data$adult_income <- NA
-data$adult_income[data$AGEATINT_1979==17] <- rowMeans(data[data$AGEATINT_1979==17,c("income08_per_log","income10_per_log","income12_per_log","income14_per_log","income16_per_log")], na.rm = T)
-data$adult_income[data$AGEATINT_1979==16] <- rowMeans(data[data$AGEATINT_1979==16,c("income08_per_log","income10_per_log","income12_per_log","income14_per_log","income16_per_log")], na.rm = T)
-data$adult_income[data$AGEATINT_1979==15] <- rowMeans(data[data$AGEATINT_1979==15,c("income10_per_log","income12_per_log","income14_per_log","income16_per_log","income18_per_log")], na.rm = T)
-data$adult_income[data$AGEATINT_1979==14] <- rowMeans(data[data$AGEATINT_1979==14,c("income10_per_log","income12_per_log","income14_per_log","income16_per_log","income18_per_log")], na.rm = T)
-data$adult_income[is.nan(data$adult_income)] <- NA # recode NaN to NA. Nothing worrisome. 
-summary(data$adult_income)
-cor.test(data$parental_income, data$adult_income)
+data$adult_income_log <- NA
+data$adult_income_log[data$AGEATINT_1979==17] <- rowMeans(data[data$AGEATINT_1979==17,c("income08_per_log","income10_per_log","income12_per_log")], na.rm = T)
+data$adult_income_log[data$AGEATINT_1979==16] <- rowMeans(data[data$AGEATINT_1979==16,c("income08_per_log","income10_per_log","income12_per_log")], na.rm = T)
+data$adult_income_log[data$AGEATINT_1979==15] <- rowMeans(data[data$AGEATINT_1979==15,c("income10_per_log","income12_per_log","income14_per_log")], na.rm = T)
+data$adult_income_log[data$AGEATINT_1979==14] <- rowMeans(data[data$AGEATINT_1979==14,c("income10_per_log","income12_per_log","income14_per_log")], na.rm = T)
+data$adult_income_log[is.nan(data$adult_income_log)] <- NA # recode NaN to NA. Nothing worrisome. 
+summary(data$adult_income_log)
+cor.test(data$parental_income_log, data$adult_income_log)
+
+data$adult_income_rank <- NA
+data$adult_income_rank[data$AGEATINT_1979==17] <- rowMeans(data[data$AGEATINT_1979==17,c("income08_per_rank","income10_per_rank","income12_per_rank")], na.rm = T)
+data$adult_income_rank[data$AGEATINT_1979==16] <- rowMeans(data[data$AGEATINT_1979==16,c("income08_per_rank","income10_per_rank","income12_per_rank")], na.rm = T)
+data$adult_income_rank[data$AGEATINT_1979==15] <- rowMeans(data[data$AGEATINT_1979==15,c("income10_per_rank","income12_per_rank","income14_per_rank")], na.rm = T)
+data$adult_income_rank[data$AGEATINT_1979==14] <- rowMeans(data[data$AGEATINT_1979==14,c("income10_per_rank","income12_per_rank","income14_per_rank")], na.rm = T)
+data$adult_income_rank[is.nan(data$adult_income_rank)] <- NA # recode NaN to NA. Nothing worrisome. 
+summary(data$adult_income_rank)
+cor.test(data$parental_income_rank, data$adult_income_rank)
+
 
 # College attendance
 # Any attendance between age 19 and age 23. 
@@ -115,13 +148,27 @@ data$attendance[data$AGEATINT_1979==14&(data$ENROLLMTREV84_1984!=3&data$ENROLLMT
 data$attendance <- factor(data$attendance, levels = c(0,1), labels = c("no","yes"))
 table(data$attendance, useNA="always")
 
+# high school graduation status at age 23
+data$HS23 <- NA  
+data$HS23[data$AGEATINT_1979==17&(data$ENROLLMTREV85_1985==3|data$ENROLLMTREV85_1985==4)] <- 1  # enrolled in college | not enrolled, high school graduate
+data$HS23[data$AGEATINT_1979==17&(data$ENROLLMTREV85_1985==1|data$ENROLLMTREV85_1985==2)] <- 0  # not enrolled, completed less than 12th grade | enrolled in high school
+data$HS23[data$AGEATINT_1979==16&(data$ENROLLMTREV86_1986==3|data$ENROLLMTREV86_1986==4)] <- 1 
+data$HS23[data$AGEATINT_1979==16&(data$ENROLLMTREV86_1986==1|data$ENROLLMTREV86_1986==2)] <- 0  
+data$HS23[data$AGEATINT_1979==15&(data$ENROLLMTREV87_1987==3|data$ENROLLMTREV87_1987==4)] <- 1 
+data$HS23[data$AGEATINT_1979==15&(data$ENROLLMTREV87_1987==1|data$ENROLLMTREV87_1987==2)] <- 0  
+data$HS23[data$AGEATINT_1979==14&(data$ENROLLMTREV88_1988==3|data$ENROLLMTREV88_1988==4)] <- 1 
+data$HS23[data$AGEATINT_1979==14&(data$ENROLLMTREV88_1988==1|data$ENROLLMTREV88_1988==2)] <- 0  
+table(data$HS23, useNA="always")
+table(data$HS23,data$attendance, useNA="always")
+data$HS23[data$attendance=="yes"] <- 1
+
 # College completion 
-# I use age 28 as the cut-off. The treatment is essentially getting bachelor degree in or before age 28.
+# I use age 29 as the cut-off. The treatment is essentially getting bachelor degree in or before age 28.
 # 1988 is the first year educational attainment is measured. 
-# For the 14 year olds in 1979, I use data from 1988, 1989, 1990, 1991, 1992, 1993.
-# For the 15 year olds in 1979, I use data from 1988, 1989, 1990, 1991, 1992.
-# For the 16 year olds in 1979, I use data from 1988, 1989, 1990, 1991.
-# For the 17 year olds in 1979, I use data from 1988, 1989, 1990.
+# For the 14 year olds in 1979, I use data from 1988, 1989, 1990, 1991, 1992, 1993, 1994.
+# For the 15 year olds in 1979, I use data from 1988, 1989, 1990, 1991, 1992, 1993.
+# For the 16 year olds in 1979, I use data from 1988, 1989, 1990, 1991, 1992.
+# For the 17 year olds in 1979, I use data from 1988, 1989, 1990, 1991.
 # Q3-10B variables >=3 & <=7: bachelor degree or above; Q3-10B <=2 | ==8: HS, associate/junior college, or "other"
 data$completion <- NA
 data$completion[data$`Q3-10B_1988`>=3 & data$`Q3-10B_1988`<=7] <- 1 
@@ -130,15 +177,30 @@ data$completion[data$`Q3-10B_1989`>=3 & data$`Q3-10B_1989`<=7] <- 1
 data$completion[data$`Q3-10B_1989`<=2 | data$`Q3-10B_1989`==8] <- 0 
 data$completion[data$`Q3-10B_1990`>=3 & data$`Q3-10B_1990`<=7] <- 1 
 data$completion[data$`Q3-10B_1990`<=2 | data$`Q3-10B_1990`==8] <- 0 
-data$completion[data$`Q3-10B_1991`>=3 & data$`Q3-10B_1991`<=7 & data$AGEATINT_1979!=17] <- 1 
-data$completion[(data$`Q3-10B_1991`<=2 | data$`Q3-10B_1991`==8) & data$AGEATINT_1979!=17] <- 0 
-data$completion[data$`Q3-10B_1992`>=3 & data$`Q3-10B_1992`<=7 & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15)] <- 1 
-data$completion[(data$`Q3-10B_1992`<=2 | data$`Q3-10B_1992`==8) & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15)] <- 0 
-data$completion[data$`Q3-10B_1993`>=3 & data$`Q3-10B_1993`<=7 & data$AGEATINT_1979==14] <- 1 
-data$completion[(data$`Q3-10B_1993`<=2 | data$`Q3-10B_1993`==8) & data$AGEATINT_1979==14] <- 0 
-
+data$completion[data$`Q3-10B_1991`>=3 & data$`Q3-10B_1991`<=7] <- 1 
+data$completion[data$`Q3-10B_1991`<=2 | data$`Q3-10B_1991`==8] <- 0 
+data$completion[data$`Q3-10B_1992`>=3 & data$`Q3-10B_1992`<=7 & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15 | data$AGEATINT_1979==16)] <- 1 
+data$completion[(data$`Q3-10B_1992`<=2 | data$`Q3-10B_1992`==8) & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15 | data$AGEATINT_1979==16)] <- 0 
+data$completion[data$`Q3-10B_1993`>=3 & data$`Q3-10B_1993`<=7 & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15)] <- 1 
+data$completion[(data$`Q3-10B_1993`<=2 | data$`Q3-10B_1993`==8) & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15)] <- 0 
+data$completion[data$`Q3-10B_1993`>=3 & data$`Q3-10B_1993`<=7 & (data$AGEATINT_1979==14)] <- 1 
+data$completion[(data$`Q3-10B_1993`<=2 | data$`Q3-10B_1993`==8) & (data$AGEATINT_1979==14)] <- 0 
 data$completion <- factor(data$completion, levels = c(0,1), labels = c("no","yes"))
 table(data$completion, useNA = "always")
+
+# high school graduation status at age 29
+data$HS29 <- NA  
+data$HS29[data$AGEATINT_1979==17&(data$ENROLLMTREV91_1991==3|data$ENROLLMTREV91_1991==4)] <- 1  # enrolled in college | not enrolled, high school graduate
+data$HS29[data$AGEATINT_1979==17&(data$ENROLLMTREV91_1991==1|data$ENROLLMTREV91_1991==2)] <- 0  # not enrolled, completed less than 12th grade | enrolled in high school
+data$HS29[data$AGEATINT_1979==16&(data$ENROLLMTREV92_1992==3|data$ENROLLMTREV92_1992==4)] <- 1 
+data$HS29[data$AGEATINT_1979==16&(data$ENROLLMTREV92_1992==1|data$ENROLLMTREV92_1992==2)] <- 0  
+data$HS29[data$AGEATINT_1979==15&(data$ENROLLMTREV93_1993==3|data$ENROLLMTREV93_1993==4)] <- 1 
+data$HS29[data$AGEATINT_1979==15&(data$ENROLLMTREV93_1993==1|data$ENROLLMTREV93_1993==2)] <- 0  
+data$HS29[data$AGEATINT_1979==14&(data$ENROLLMTREV94_1994==3|data$ENROLLMTREV94_1994==4)] <- 1 
+data$HS29[data$AGEATINT_1979==14&(data$ENROLLMTREV88_1994==1|data$ENROLLMTREV94_1994==2)] <- 0  
+table(data$HS29, useNA="always")
+table(data$HS29, data$completion, useNA="always")
+data$HS29[!is.na(data$completion)] <- 1  # if completion is not NA, then high school graduation is established with data from some previous year.
 
 # gender
 table(data$SAMPLE_SEX_1979)
@@ -279,40 +341,228 @@ data$region <- as.factor(data$REGION_1979)
 table(data$`FAM-9_1979`, useNA = "always")
 data$m_work <- as.factor(data$`FAM-9_1979`)
 
-data_cleaned <- data[,c("id","adult_income","attendance","completion","parental_income","race","gender",
+
+# data for the great equalizer thesis
+data_cleaned_ge <- data[!is.na(data$HS29),]
+data_cleaned_ge <- data_cleaned_ge[data_cleaned_ge$HS29==1,c("id","adult_income_log","adult_income_rank","completion","parental_income_log","parental_income_rank","race","gender",
                         "medu","fedu","parental_presence","n_sib","urban","edu_exp","AFQT","age","friend_edu_exp",
                         "rotter_score","rosenberg_irt_score","sig_other_expec","school_satisfaction","foreign_lang",
                         "SMSA","mother_seperate","college_prep","f_foreign_born","m_foreign_born","region","m_work")]
+saveRDS(data_cleaned_ge, file="data_cleaned_ge.rds")
 
-## Multiple imputation
-nom_names <- colnames(data_cleaned[,unlist(lapply(data_cleaned, class))=="factor"])  # nomimal variable names
+# data for the mare thesis
+data_cleaned_mare <- data[!is.na(data$HS23),]
+data_cleaned_mare <- data_cleaned_mare[data_cleaned_mare$HS23==1,c("id","adult_income_log","adult_income_rank","attendance","completion","parental_income_log","parental_income_rank","race","gender",
+                             "medu","fedu","parental_presence","n_sib","urban","edu_exp","AFQT","age","friend_edu_exp",
+                             "rotter_score","rosenberg_irt_score","sig_other_expec","school_satisfaction","foreign_lang",
+                             "SMSA","mother_seperate","college_prep","f_foreign_born","m_foreign_born","region","m_work")]
+saveRDS(data_cleaned_mare, file="data_cleaned_mare.rds")
+
+## Multiple imputation for the GE data
+nom_names <- colnames(data_cleaned_ge[,unlist(lapply(data_cleaned_ge, class))=="factor"])  # nomimal variable names
 # factor variables are specified using the noms argument to maintain only legitimate values
 set.seed(1)
-data_imputed <- amelia(data_cleaned, m=10, noms=nom_names, idvars="id", parallel="multicore")
+data_imputed <- amelia(data_cleaned_ge, m=10, noms=nom_names, idvars="id", parallel="multicore")
 
-# the multiple imputation, then deletion (MID) strategy (von Hippel, 2007)
-data_imputed.1 <- data_imputed$imputations[[1]][!is.na(data_cleaned$adult_income),]
-data_imputed.2 <- data_imputed$imputations[[2]][!is.na(data_cleaned$adult_income),]
-data_imputed.3 <- data_imputed$imputations[[3]][!is.na(data_cleaned$adult_income),]
-data_imputed.4 <- data_imputed$imputations[[4]][!is.na(data_cleaned$adult_income),]
-data_imputed.5 <- data_imputed$imputations[[5]][!is.na(data_cleaned$adult_income),]
-data_imputed.6 <- data_imputed$imputations[[6]][!is.na(data_cleaned$adult_income),]
-data_imputed.7 <- data_imputed$imputations[[7]][!is.na(data_cleaned$adult_income),]
-data_imputed.8 <- data_imputed$imputations[[8]][!is.na(data_cleaned$adult_income),]
-data_imputed.9 <- data_imputed$imputations[[9]][!is.na(data_cleaned$adult_income),]
-data_imputed.10 <- data_imputed$imputations[[10]][!is.na(data_cleaned$adult_income),]
+# convert all factor variables to numeric 
+for (i in 1:10) {
+  data <- data_imputed$imputations[[i]]
+  
+  data$gender <- as.numeric(data$gender)-1
+  
+  data$parental_presence <- as.numeric(data$parental_presence)-1
+  
+  data$n_sib <- as.numeric(data$n_sib)-1
+  
+  data$urban <- as.numeric(data$urban)-1
+  
+  data$edu_exp <- as.numeric(data$edu_exp)-2
+  data$edu_exp[data$edu_exp==-1] <- 0
+  
+  data$age <- as.numeric(data$age)-1
+  
+  data$friend_edu_exp <- as.numeric(data$friend_edu_exp)-2
+  data$friend_edu_exp[data$friend_edu_exp==-1] <- 0
+  
+  data$sig_other_exp1 <- NA
+  data$sig_other_exp1[data$sig_other_expec==1 & !is.na(data$sig_other_expec)] <- 1
+  data$sig_other_exp1[data$sig_other_expec!=1 & !is.na(data$sig_other_expec)] <- 0
+  data$sig_other_exp2 <- NA
+  data$sig_other_exp2[data$sig_other_expec==2 & !is.na(data$sig_other_expec)] <- 1
+  data$sig_other_exp2[data$sig_other_expec!=2 & !is.na(data$sig_other_expec)] <- 0
+  data$sig_other_exp3 <- NA
+  data$sig_other_exp3[data$sig_other_expec==3 & !is.na(data$sig_other_expec)] <- 1
+  data$sig_other_exp3[data$sig_other_expec!=3 & !is.na(data$sig_other_expec)] <- 0
+  data$sig_other_exp4 <- NA
+  data$sig_other_exp4[data$sig_other_expec==4 & !is.na(data$sig_other_expec)] <- 1
+  data$sig_other_exp4[data$sig_other_expec!=4 & !is.na(data$sig_other_expec)] <- 0
+  
+  data$foreign_lang <- as.numeric(data$foreign_lang)-1
+  
+  data$SMSA1 <- NA
+  data$SMSA1[data$SMSA==0 & !is.na(data$SMSA)] <- 1
+  data$SMSA1[data$SMSA!=0 & !is.na(data$SMSA)] <- 0
+  data$SMSA2 <- NA
+  data$SMSA2[data$SMSA==1 & !is.na(data$SMSA)] <- 1
+  data$SMSA2[data$SMSA!=1 & !is.na(data$SMSA)] <- 0
+  data$SMSA3 <- NA
+  data$SMSA3[data$SMSA==2 & !is.na(data$SMSA)] <- 1
+  data$SMSA3[data$SMSA!=2 & !is.na(data$SMSA)] <- 0
+  data$SMSA4 <- NA
+  data$SMSA4[data$SMSA==3 & !is.na(data$SMSA)] <- 1
+  data$SMSA4[data$SMSA!=3 & !is.na(data$SMSA)] <- 0
+  
+  data$foreign_lang <- as.numeric(data$foreign_lang)-1
+  
+  data$mother_seperate <- as.numeric(data$mother_seperate)-1
+  
+  data$college_prep <- as.numeric(data$college_prep)-1
+  
+  data$school_satis1 <- NA
+  data$school_satis1[(data$school_satisfaction==1 | data$school_satisfaction==2) & !is.na(data$school_satisfaction)] <- 1
+  data$school_satis1[data$school_satisfaction!=1 & data$school_satisfaction!=2 & !is.na(data$school_satisfaction)] <- 0
+  data$school_satis2 <- NA
+  data$school_satis2[data$school_satisfaction==3 & !is.na(data$school_satisfaction)] <- 1
+  data$school_satis2[data$school_satisfaction!=3 & !is.na(data$school_satisfaction)] <- 0
+  data$school_satis3 <- NA
+  data$school_satis3[data$school_satisfaction==4 & !is.na(data$school_satisfaction)] <- 1
+  data$school_satis3[data$school_satisfaction!=4 & !is.na(data$school_satisfaction)] <- 0
+  
+  data$fm_foreign_born <- NA
+  data$fm_foreign_born[(data$f_foreign_born==2 | data$m_foreign_born==2) & !is.na(data$f_foreign_born) & !is.na(data$m_foreign_born)] <- 1
+  data$fm_foreign_born[(data$f_foreign_born==1 | data$m_foreign_born==1) & !is.na(data$f_foreign_born) & !is.na(data$m_foreign_born)] <- 0
+  
+  data$region1 <- NA
+  data$region1[data$region==1 & !is.na(data$region)] <- 1
+  data$region1[data$region!=1 & !is.na(data$region)] <- 0
+  data$region2 <- NA
+  data$region2[data$region==2 & !is.na(data$region)] <- 1
+  data$region2[data$region!=2 & !is.na(data$region)] <- 0
+  data$region3 <- NA
+  data$region3[data$region==3 & !is.na(data$region)] <- 1
+  data$region3[data$region!=3 & !is.na(data$region)] <- 0
+  data$region4 <- NA
+  data$region4[data$region==4 & !is.na(data$region)] <- 1
+  data$region4[data$region!=4 & !is.na(data$region)] <- 0
+  
+  data$m_work <- as.numeric(data$m_work)-1
+  
+  data$race1 <- NA
+  data$race1[data$race=="Other" & !is.na(data$race)] <- 1
+  data$race1[data$race!="Other" & !is.na(data$race)] <- 0
+  data$race2 <- NA
+  data$race2[data$race=="Black" & !is.na(data$race)] <- 1
+  data$race2[data$race!="Black" & !is.na(data$race)] <- 0
+  data$race3 <- NA
+  data$race3[data$race=="Hispanic" & !is.na(data$race)] <- 1
+  data$race3[data$race!="Hispanic" & !is.na(data$race)] <- 0
+  
+  data$completion <- as.numeric(data$completion)-1
+  
+  saveRDS(data, file=paste("imputed data/data_imputed_ge",i,".rds",sep=""))
+}
 
-sum(is.na(data_cleaned$adult_income))
-sum(is.na(data_imputed.1$adult_income))
 
-saveRDS(data_imputed.1, file="imputed data/data_imputed1.rds")
-saveRDS(data_imputed.2, file="imputed data/data_imputed2.rds")
-saveRDS(data_imputed.3, file="imputed data/data_imputed3.rds")
-saveRDS(data_imputed.4, file="imputed data/data_imputed4.rds")
-saveRDS(data_imputed.5, file="imputed data/data_imputed5.rds")
-saveRDS(data_imputed.6, file="imputed data/data_imputed6.rds")
-saveRDS(data_imputed.7, file="imputed data/data_imputed7.rds")
-saveRDS(data_imputed.8, file="imputed data/data_imputed8.rds")
-saveRDS(data_imputed.9, file="imputed data/data_imputed9.rds")
-saveRDS(data_imputed.10, file="imputed data/data_imputed10.rds")
+## Multiple imputation for the Mare data
+nom_names <- colnames(data_cleaned_mare[,unlist(lapply(data_cleaned_mare, class))=="factor"])  # nomimal variable names
+# factor variables are specified using the noms argument to maintain only legitimate values
+set.seed(1)
+data_imputed <- amelia(data_cleaned_mare, m=10, noms=nom_names, idvars="id", parallel="multicore")
 
+for (i in 1:10) {
+  data <- data_imputed$imputations[[i]]
+  
+  data$gender <- as.numeric(data$gender)-1
+  
+  data$parental_presence <- as.numeric(data$parental_presence)-1
+  
+  data$n_sib <- as.numeric(data$n_sib)-1
+  
+  data$urban <- as.numeric(data$urban)-1
+  
+  data$edu_exp <- as.numeric(data$edu_exp)-2
+  data$edu_exp[data$edu_exp==-1] <- 0
+  
+  data$age <- as.numeric(data$age)-1
+  
+  data$friend_edu_exp <- as.numeric(data$friend_edu_exp)-2
+  data$friend_edu_exp[data$friend_edu_exp==-1] <- 0
+  
+  data$sig_other_exp1 <- NA
+  data$sig_other_exp1[data$sig_other_expec==1 & !is.na(data$sig_other_expec)] <- 1
+  data$sig_other_exp1[data$sig_other_expec!=1 & !is.na(data$sig_other_expec)] <- 0
+  data$sig_other_exp2 <- NA
+  data$sig_other_exp2[data$sig_other_expec==2 & !is.na(data$sig_other_expec)] <- 1
+  data$sig_other_exp2[data$sig_other_expec!=2 & !is.na(data$sig_other_expec)] <- 0
+  data$sig_other_exp3 <- NA
+  data$sig_other_exp3[data$sig_other_expec==3 & !is.na(data$sig_other_expec)] <- 1
+  data$sig_other_exp3[data$sig_other_expec!=3 & !is.na(data$sig_other_expec)] <- 0
+  data$sig_other_exp4 <- NA
+  data$sig_other_exp4[data$sig_other_expec==4 & !is.na(data$sig_other_expec)] <- 1
+  data$sig_other_exp4[data$sig_other_expec!=4 & !is.na(data$sig_other_expec)] <- 0
+  
+  data$foreign_lang <- as.numeric(data$foreign_lang)-1
+  
+  data$SMSA1 <- NA
+  data$SMSA1[data$SMSA==0 & !is.na(data$SMSA)] <- 1
+  data$SMSA1[data$SMSA!=0 & !is.na(data$SMSA)] <- 0
+  data$SMSA2 <- NA
+  data$SMSA2[data$SMSA==1 & !is.na(data$SMSA)] <- 1
+  data$SMSA2[data$SMSA!=1 & !is.na(data$SMSA)] <- 0
+  data$SMSA3 <- NA
+  data$SMSA3[data$SMSA==2 & !is.na(data$SMSA)] <- 1
+  data$SMSA3[data$SMSA!=2 & !is.na(data$SMSA)] <- 0
+  data$SMSA4 <- NA
+  data$SMSA4[data$SMSA==3 & !is.na(data$SMSA)] <- 1
+  data$SMSA4[data$SMSA!=3 & !is.na(data$SMSA)] <- 0
+  
+  data$foreign_lang <- as.numeric(data$foreign_lang)-1
+  
+  data$mother_seperate <- as.numeric(data$mother_seperate)-1
+  
+  data$college_prep <- as.numeric(data$college_prep)-1
+  
+  data$school_satis1 <- NA
+  data$school_satis1[(data$school_satisfaction==1 | data$school_satisfaction==2) & !is.na(data$school_satisfaction)] <- 1
+  data$school_satis1[data$school_satisfaction!=1 & data$school_satisfaction!=2 & !is.na(data$school_satisfaction)] <- 0
+  data$school_satis2 <- NA
+  data$school_satis2[data$school_satisfaction==3 & !is.na(data$school_satisfaction)] <- 1
+  data$school_satis2[data$school_satisfaction!=3 & !is.na(data$school_satisfaction)] <- 0
+  data$school_satis3 <- NA
+  data$school_satis3[data$school_satisfaction==4 & !is.na(data$school_satisfaction)] <- 1
+  data$school_satis3[data$school_satisfaction!=4 & !is.na(data$school_satisfaction)] <- 0
+  
+  data$fm_foreign_born <- NA
+  data$fm_foreign_born[(data$f_foreign_born==2 | data$m_foreign_born==2) & !is.na(data$f_foreign_born) & !is.na(data$m_foreign_born)] <- 1
+  data$fm_foreign_born[(data$f_foreign_born==1 | data$m_foreign_born==1) & !is.na(data$f_foreign_born) & !is.na(data$m_foreign_born)] <- 0
+  
+  data$region1 <- NA
+  data$region1[data$region==1 & !is.na(data$region)] <- 1
+  data$region1[data$region!=1 & !is.na(data$region)] <- 0
+  data$region2 <- NA
+  data$region2[data$region==2 & !is.na(data$region)] <- 1
+  data$region2[data$region!=2 & !is.na(data$region)] <- 0
+  data$region3 <- NA
+  data$region3[data$region==3 & !is.na(data$region)] <- 1
+  data$region3[data$region!=3 & !is.na(data$region)] <- 0
+  data$region4 <- NA
+  data$region4[data$region==4 & !is.na(data$region)] <- 1
+  data$region4[data$region!=4 & !is.na(data$region)] <- 0
+  
+  data$m_work <- as.numeric(data$m_work)-1
+  
+  data$race1 <- NA
+  data$race1[data$race=="Other" & !is.na(data$race)] <- 1
+  data$race1[data$race!="Other" & !is.na(data$race)] <- 0
+  data$race2 <- NA
+  data$race2[data$race=="Black" & !is.na(data$race)] <- 1
+  data$race2[data$race!="Black" & !is.na(data$race)] <- 0
+  data$race3 <- NA
+  data$race3[data$race=="Hispanic" & !is.na(data$race)] <- 1
+  data$race3[data$race!="Hispanic" & !is.na(data$race)] <- 0
+  
+  data$attendance <- as.numeric(data$attendance)-1
+  data$completion <- as.numeric(data$completion)-1
+  
+  saveRDS(data, file=paste("imputed data/data_imputed_mare",i,".rds",sep=""))
+}
