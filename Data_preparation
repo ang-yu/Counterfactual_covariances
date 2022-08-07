@@ -153,7 +153,36 @@ data$attendance23[data$AGEATINT_1979==14&(data$ENROLLMTREV79_1979!=3&data$ENROLL
 data$attendance23 <- factor(data$attendance23, levels = c(0,1), labels = c("no","yes"))
 table(data$attendance23, useNA="always")
 
+# Any attendance by age 29. 
+# Note that the enrollment variables refer to enrollment status on May 1st. So enrollment when 19 years old captures enrollment in the academic year spanning age 18 and age 19.
+# For the 14 year olds in 1979, I use data from 1984, 1985, 1986, 1987, 1988.  1994
+# For the 15 year olds in 1979, I use data from 1983, 1984, 1985, 1986, 1987.  1993
+# For the 16 year olds in 1979, I use data from 1982, 1983, 1984, 1985, 1986.  1992
+# For the 17 year olds in 1979, I use data from 1981, 1982, 1983, 1984, 1985.  1991
+data$attendance29 <- NA
+data$attendance29[data$AGEATINT_1979==17&(data$ENROLLMTREV79_1979==3|data$ENROLLMTREV80_1980==3|data$ENROLLMTREV81_1981==3|data$ENROLLMTREV82_1982==3|data$ENROLLMTREV83_1983==3|data$ENROLLMTREV84_1984==3|data$ENROLLMTREV85_1985==3|data$ENROLLMTREV86_1986==3|data$ENROLLMTREV87_1987==3|data$ENROLLMTREV88_1988==3|data$ENROLLMTREV89_1989==3|data$ENROLLMTREV91_1991==3)] <- 1
+data$attendance29[data$AGEATINT_1979==17&(data$ENROLLMTREV79_1979!=3&data$ENROLLMTREV80_1980!=3&data$ENROLLMTREV81_1981!=3&data$ENROLLMTREV82_1982!=3&data$ENROLLMTREV83_1983!=3&data$ENROLLMTREV84_1984!=3&data$ENROLLMTREV85_1985!=3&data$ENROLLMTREV86_1986!=3&data$ENROLLMTREV87_1987!=3&data$ENROLLMTREV88_1988!=3&data$ENROLLMTREV89_1989!=3&data$ENROLLMTREV91_1991!=3)] <- 0
+data$attendance29[data$AGEATINT_1979==16&(data$ENROLLMTREV79_1979==3|data$ENROLLMTREV80_1980==3|data$ENROLLMTREV81_1981==3|data$ENROLLMTREV82_1982==3|data$ENROLLMTREV83_1983==3|data$ENROLLMTREV84_1984==3|data$ENROLLMTREV85_1985==3|data$ENROLLMTREV86_1986==3|data$ENROLLMTREV87_1987==3|data$ENROLLMTREV88_1988==3|data$ENROLLMTREV89_1989==3|data$ENROLLMTREV91_1991==3|data$ENROLLMTREV92_1992==3)] <- 1
+data$attendance29[data$AGEATINT_1979==16&(data$ENROLLMTREV79_1979!=3&data$ENROLLMTREV80_1980!=3&data$ENROLLMTREV81_1981!=3&data$ENROLLMTREV82_1982!=3&data$ENROLLMTREV83_1983!=3&data$ENROLLMTREV84_1984!=3&data$ENROLLMTREV85_1985!=3&data$ENROLLMTREV86_1986!=3&data$ENROLLMTREV87_1987!=3&data$ENROLLMTREV88_1988!=3&data$ENROLLMTREV89_1989!=3&data$ENROLLMTREV91_1991!=3&data$ENROLLMTREV92_1992!=3)] <- 0
+data$attendance29[data$AGEATINT_1979==15&(data$ENROLLMTREV79_1979==3|data$ENROLLMTREV80_1980==3|data$ENROLLMTREV81_1981==3|data$ENROLLMTREV82_1982==3|data$ENROLLMTREV83_1983==3|data$ENROLLMTREV84_1984==3|data$ENROLLMTREV85_1985==3|data$ENROLLMTREV86_1986==3|data$ENROLLMTREV87_1987==3|data$ENROLLMTREV88_1988==3|data$ENROLLMTREV89_1989==3|data$ENROLLMTREV91_1991==3|data$ENROLLMTREV92_1992==3|data$ENROLLMTREV93_1993==3)] <- 1
+data$attendance29[data$AGEATINT_1979==15&(data$ENROLLMTREV79_1979!=3&data$ENROLLMTREV80_1980!=3&data$ENROLLMTREV81_1981!=3&data$ENROLLMTREV82_1982!=3&data$ENROLLMTREV83_1983!=3&data$ENROLLMTREV84_1984!=3&data$ENROLLMTREV85_1985!=3&data$ENROLLMTREV86_1986!=3&data$ENROLLMTREV87_1987!=3&data$ENROLLMTREV88_1988!=3&data$ENROLLMTREV89_1989!=3&data$ENROLLMTREV91_1991!=3&data$ENROLLMTREV92_1992!=3&data$ENROLLMTREV93_1993!=3)] <- 0
+data$attendance29[data$AGEATINT_1979==14&(data$ENROLLMTREV79_1979==3|data$ENROLLMTREV80_1980==3|data$ENROLLMTREV81_1981==3|data$ENROLLMTREV82_1982==3|data$ENROLLMTREV83_1983==3|data$ENROLLMTREV84_1984==3|data$ENROLLMTREV85_1985==3|data$ENROLLMTREV86_1986==3|data$ENROLLMTREV87_1987==3|data$ENROLLMTREV88_1988==3|data$ENROLLMTREV89_1989==3|data$ENROLLMTREV91_1991==3|data$ENROLLMTREV92_1992==3|data$ENROLLMTREV93_1993==3|data$ENROLLMTREV94_1994==3)] <- 1
+data$attendance29[data$AGEATINT_1979==14&(data$ENROLLMTREV79_1979!=3&data$ENROLLMTREV80_1980!=3&data$ENROLLMTREV81_1981!=3&data$ENROLLMTREV82_1982!=3&data$ENROLLMTREV83_1983!=3&data$ENROLLMTREV84_1984!=3&data$ENROLLMTREV85_1985!=3&data$ENROLLMTREV86_1986!=3&data$ENROLLMTREV87_1987!=3&data$ENROLLMTREV88_1988!=3&data$ENROLLMTREV89_1989!=3&data$ENROLLMTREV91_1991!=3&data$ENROLLMTREV92_1992!=3&data$ENROLLMTREV93_1993!=3&data$ENROLLMTREV94_1994!=3)] <- 0
+# I have checked. If in any year enrollment=3, but in some other years enrollment=NA, attendance29 will still be 1. 
+data$attendance29 <- factor(data$attendance29, levels = c(0,1), labels = c("no","yes"))
+table(data$attendance29, useNA="always")
 
+# high school graduation status at age 20
+data$HS20 <- NA  
+data$HS20[data$AGEATINT_1979==17&(data$ENROLLMTREV82_1982>=3)] <- 1  # enrolled in college | not enrolled, high school graduate
+data$HS20[data$AGEATINT_1979==17&(data$ENROLLMTREV82_1982<=2)] <- 0  # not enrolled, completed less than 12th grade | enrolled in high school
+data$HS20[data$AGEATINT_1979==16&(data$ENROLLMTREV83_1983>=3)] <- 1 
+data$HS20[data$AGEATINT_1979==16&(data$ENROLLMTREV83_1983<=2)] <- 0  
+data$HS20[data$AGEATINT_1979==15&(data$ENROLLMTREV84_1984>=3)] <- 1 
+data$HS20[data$AGEATINT_1979==15&(data$ENROLLMTREV84_1984<=2)] <- 0  
+data$HS20[data$AGEATINT_1979==14&(data$ENROLLMTREV85_1985>=3)] <- 1 
+data$HS20[data$AGEATINT_1979==14&(data$ENROLLMTREV85_1985<=2)] <- 0  
+table(data$HS20, useNA="always")
 
 # high school graduation status at age 23
 data$HS23 <- NA  
@@ -194,8 +223,31 @@ data$completion[data$`Q3-10B_1994`>=3 & data$`Q3-10B_1994`<=7 & (data$AGEATINT_1
 data$completion[(data$`Q3-10B_1994`<=2 | data$`Q3-10B_1994`==8) & (data$AGEATINT_1979==14)] <- 0 
 data$completion <- factor(data$completion, levels = c(0,1), labels = c("no","yes"))
 table(data$completion, useNA = "always")
+## Note that the completion variable is NA is the respondent hasn't graduated from high shcool
+# So one shouldn't analyze completion together with HS without recoding completion
+
+# graduate degree attainment
+data$grad <- NA
+data$grad[data$`Q3-10B_1988`>=5 & data$`Q3-10B_1988`<=7] <- 1 
+data$grad[data$`Q3-10B_1988`<=4 | data$`Q3-10B_1988`==8] <- 0 
+data$grad[data$`Q3-10B_1989`>=5 & data$`Q3-10B_1989`<=7] <- 1 
+data$grad[data$`Q3-10B_1989`<=4 | data$`Q3-10B_1989`==8] <- 0 
+data$grad[data$`Q3-10B_1990`>=5 & data$`Q3-10B_1990`<=7] <- 1 
+data$grad[data$`Q3-10B_1990`<=4 | data$`Q3-10B_1990`==8] <- 0 
+data$grad[data$`Q3-10B_1991`>=5 & data$`Q3-10B_1991`<=7] <- 1 
+data$grad[data$`Q3-10B_1991`<=4 | data$`Q3-10B_1991`==8] <- 0 
+data$grad[data$`Q3-10B_1992`>=5 & data$`Q3-10B_1992`<=7 & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15 | data$AGEATINT_1979==16)] <- 1 
+data$grad[(data$`Q3-10B_1992`<=4 | data$`Q3-10B_1992`==8) & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15 | data$AGEATINT_1979==16)] <- 0 
+data$grad[data$`Q3-10B_1993`>=5 & data$`Q3-10B_1993`<=7 & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15)] <- 1 
+data$grad[(data$`Q3-10B_1993`<=4 | data$`Q3-10B_1993`==8) & (data$AGEATINT_1979==14 | data$AGEATINT_1979==15)] <- 0 
+data$grad[data$`Q3-10B_1994`>=5 & data$`Q3-10B_1994`<=7 & (data$AGEATINT_1979==14)] <- 1 
+data$grad[(data$`Q3-10B_1994`<=4 | data$`Q3-10B_1994`==8) & (data$AGEATINT_1979==14)] <- 0 
+data$grad <- factor(data$grad, levels = c(0,1), labels = c("no","yes"))
+table(data$grad, useNA = "always")
+
 
 # high school graduation status at age 29
+# It is sufficient to focus on the final year in the period instead of all years from 1979. I have checked and the two approach do not differ at all.
 data$HS29 <- NA  
 data$HS29[data$AGEATINT_1979==17&(data$ENROLLMTREV91_1991==3|data$ENROLLMTREV91_1991==4)] <- 1  # enrolled in college | not enrolled, high school graduate
 data$HS29[data$AGEATINT_1979==17&(data$ENROLLMTREV91_1991==1|data$ENROLLMTREV91_1991==2)] <- 0  # not enrolled, completed less than 12th grade | enrolled in high school
@@ -208,6 +260,9 @@ data$HS29[data$AGEATINT_1979==14&(data$ENROLLMTREV94_1994==1|data$ENROLLMTREV94_
 table(data$HS29, useNA="always")
 table(data$HS29, data$completion, useNA="always")
 data$HS29[!is.na(data$completion)] <- 1  # if completion is not NA, then high school graduation is established with data from some previous year.
+
+data$completion[data$HS29==0] <- "no"  # if HS29=0, college completion must be 0
+
 
 # gender
 table(data$SAMPLE_SEX_1979)
@@ -348,16 +403,33 @@ data_cleaned_ge <- data_cleaned_ge[,c("id","adult_income_log","adult_income_rank
 
 saveRDS(data_cleaned_ge, file="data_cleaned_ge.rds")
 
-# data for the Mare thesis
-data_cleaned_mare <- data[!is.na(data$HS23),]
-data_cleaned_mare <- data_cleaned_mare[data_cleaned_mare$HS23==1,]
-data_cleaned_mare <- data_cleaned_mare[,c("id","attendance23","completion","parental_income_log","parental_income_rank","race","gender",
+# data for the Mare thesis (high school graduation)
+data_cleaned_mare_hs <- data[,c("id","HS20","attendance29","parental_income_log","parental_income_rank","race","gender",
+                                                                "medu","parental_presence","n_sib","urban","edu_exp","AFQT","age","friend_edu_exp",
+                                                                "rotter_score","rosenberg_irt_score","sig_other_expec","school_satisfaction","foreign_lang",
+                                                                "SMSA","mother_seperate","f_foreign_born","m_foreign_born","region","m_work")]
+
+saveRDS(data_cleaned_mare_hs, file="data_cleaned_mare_hs.rds")
+
+# data for the Mare thesis (attendance)
+data_cleaned_mare_attendance <- data[!is.na(data$HS29),]
+data_cleaned_mare_attendance <- data_cleaned_mare_attendance[data_cleaned_mare_attendance$HS29==1,]
+data_cleaned_mare_attendance <- data_cleaned_mare_attendance[,c("id","attendance29","completion","parental_income_log","parental_income_rank","race","gender",
                                       "medu","parental_presence","n_sib","urban","edu_exp","AFQT","age","friend_edu_exp",
                                       "rotter_score","rosenberg_irt_score","sig_other_expec","school_satisfaction","foreign_lang",
                                       "SMSA","mother_seperate","f_foreign_born","m_foreign_born","region","m_work")]
 
-saveRDS(data_cleaned_mare, file="data_cleaned_mare.rds")
+saveRDS(data_cleaned_mare_attendance, file="data_cleaned_mare_attendance.rds")
 
+# data for the Mare thesis (graduate degree)
+data_cleaned_mare_gradaute <- data[!is.na(data$HS29),]
+data_cleaned_mare_gradaute <- data_cleaned_mare_gradaute[data_cleaned_mare_gradaute$HS29==1,]
+data_cleaned_mare_gradaute <- data_cleaned_mare_gradaute[,c("id","completion","grad","parental_income_log","parental_income_rank","race","gender",
+                                                                "medu","parental_presence","n_sib","urban","edu_exp","AFQT","age","friend_edu_exp",
+                                                                "rotter_score","rosenberg_irt_score","sig_other_expec","school_satisfaction","foreign_lang",
+                                                                "SMSA","mother_seperate","f_foreign_born","m_foreign_born","region","m_work")]
+
+saveRDS(data_cleaned_mare_gradaute, file="data_cleaned_mare_gradaute.rds")
 
 
 
