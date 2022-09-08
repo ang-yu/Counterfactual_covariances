@@ -150,6 +150,14 @@ if (algorithm=="ranger") {
                                                                            trControl=caret::trainControl(method="cv", classProbs=TRUE),
                                                                            tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="gini",min.node.size=c(1,10,100,200,400))) )
 }
+if (algorithm=="gbm") {
+  message <- utils::capture.output( YgivenDZ.Model.sample1 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample1,], method="gbm",
+                                                                           trControl=caret::trainControl(method="cv"), 
+                                                                           tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) ) 
+  message <- utils::capture.output( YgivenDZ.Model.sample2 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample2,], method="gbm",
+                                                                           trControl=caret::trainControl(method="cv"), 
+                                                                           tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) ) 
+}
 pred_data1 <- data
 pred_data1[,colnames(pred_data1)%in%D] <- 1
 YgivenDZ.Pred_D1[sample1] <- stats::predict(YgivenDZ.Model.sample2, newdata = pred_data1[sample1,], type="prob")[,2]
@@ -177,6 +185,15 @@ if (algorithm=="ranger") {
                                                                           trControl=caret::trainControl(method="cv", classProbs=TRUE),
                                                                           tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="gini",min.node.size=c(1,10,100,200,400))) )
 }
+if (algorithm=="gbm") {
+  message <- utils::capture.output( DgivenZ.Model.sample1 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample1,], method="gbm",
+                                                                          trControl=caret::trainControl(method="cv"), 
+                                                                          tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+  message <- utils::capture.output( DgivenZ.Model.sample2 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample2,], method="gbm",
+                                                                          trControl=caret::trainControl(method="cv"), 
+                                                                          tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+}
+
 DgivenZ.Pred[sample1] <- stats::predict(DgivenZ.Model.sample2, newdata=data[sample1,], type="prob")[,2]
 DgivenZ.Pred[sample2] <- stats::predict(DgivenZ.Model.sample1, newdata=data[sample2,], type="prob")[,2]
 
@@ -214,6 +231,14 @@ if (algorithm=="ranger") {
                                                                                 trControl=caret::trainControl(method="cv", classProbs=TRUE),
                                                                                 tuneGrid=expand.grid(mtry=1,splitrule="gini",min.node.size=c(1,10,100,200,400))) )
 }
+if (algorithm=="gbm") {
+  message <- utils::capture.output( YgivenDZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample1,], method="gbm",
+                                                                                trControl=caret::trainControl(method="cv"),
+                                                                                tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+  message <- utils::capture.output( YgivenDZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample2,], method="gbm",
+                                                                                trControl=caret::trainControl(method="cv"),
+                                                                                tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+}
 YgivenDZ.Pred_D1_desc[sample1] <- stats::predict(YgivenDZ.Model.sample2_desc, newdata = pred_data1[sample1,], type="prob")[,2]
 YgivenDZ.Pred_D1_desc[sample2] <- stats::predict(YgivenDZ.Model.sample1_desc, newdata = pred_data1[sample2,], type="prob")[,2]
 
@@ -238,6 +263,14 @@ if (algorithm=="ranger") {
                                                                                trControl=caret::trainControl(method="cv", classProbs=TRUE),
                                                                                tuneGrid=expand.grid(mtry=1,splitrule="gini",min.node.size=c(1,10,100,200,400))) )
 }
+if (algorithm=="gbm") {
+  message <- utils::capture.output( DgivenZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample1,], method="gbm",
+                                                                               trControl=caret::trainControl(method="cv", classProbs=TRUE),
+                                                                               tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+  message <- utils::capture.output( DgivenZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample2,], method="gbm",
+                                                                               trControl=caret::trainControl(method="cv", classProbs=TRUE),
+                                                                               tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+}
 DgivenZ.Pred_desc[sample1] <- stats::predict(DgivenZ.Model.sample2_desc, newdata=data[sample1,], type="prob")[,2]
 DgivenZ.Pred_desc[sample2] <- stats::predict(DgivenZ.Model.sample1_desc, newdata=data[sample2,], type="prob")[,2]
 
@@ -250,25 +283,6 @@ DgivenZ.Pred_desc_c[sample2] <- predict(DgivenZ.Model.sample2_desc, newdata=data
 
 YgivenDZ.Pred_D1_desc_c[sample1] <- predict(YgivenDZ.Model.sample1_desc, newdata = pred_data1[sample1,], type="prob")[,2]
 YgivenDZ.Pred_D1_desc_c[sample2] <- predict(YgivenDZ.Model.sample2_desc, newdata = pred_data1[sample2,], type="prob")[,2]
-
-
-## I have to truncate cases with extreme propensity scores, as exact 0's do happen 
-retain <- DgivenZ.Pred>=t & DgivenZ.Pred<=1-t & DgivenZ.Pred_c>=t & DgivenZ.Pred_c<=1-t 
-table(retain)
-data <- data[retain,]
-data$id2 <- 1:nrow(data)
-sample1 <- data$id2[data$id %in% sample1]   # new sample1 index for the remaining sample (the rows that have been in sample1)
-sample2 <- data$id2[data$id %in% sample2]
-
-DgivenZ.Pred <- DgivenZ.Pred[retain]
-DgivenZ.Pred_c <- DgivenZ.Pred_c[retain]
-YgivenDZ.Pred_D1 <- YgivenDZ.Pred_D1[retain]
-YgivenDZ.Pred_D1_c <- YgivenDZ.Pred_D1_c[retain]
-
-DgivenZ.Pred_desc <- DgivenZ.Pred_desc[retain]
-DgivenZ.Pred_desc_c <- DgivenZ.Pred_desc_c[retain]
-YgivenDZ.Pred_D1_desc <- YgivenDZ.Pred_D1_desc[retain]
-YgivenDZ.Pred_D1_desc_c <- YgivenDZ.Pred_D1_desc_c[retain]
 
 # denominators for stabilizing weights
 stab1 <- NA
@@ -333,15 +347,15 @@ overall$CI_lower <- overall$point - qnorm(0.975)*overall$sd
 overall$CI_higher <- overall$point + qnorm(0.975)*overall$sd 
 overall$pvalues <- 1-abs(pnorm(overall$point/overall$sd)-0.5)*2
 
-ggplot(detail, aes(x=G, y=Y)) +
-  geom_smooth(data=detail, aes(x=G, y=score1_desc, color='desc1'), se=FALSE, span=1) +
-  geom_smooth(data=detail, aes(x=G, y=score1, color='score1'), se=FALSE, span=1) + 
-  geom_smooth(data=detail, aes(x=G, y=D, color='GD'), se=FALSE, span=1) + 
-  scale_color_manual(breaks=c("desc1", "score1", "GD"),
-                     values=c("desc1"="green", "score1"="purple", "GD"="red")) +
-  theme(legend.title=element_blank()) 
-
 overall
 
-
-
+ggplot(detail, aes(x=G, y=Y)) +
+  geom_smooth(data=detail, aes(x=G, y=score1_desc, color='Y|D=1'), se=FALSE, span=1) +
+  geom_smooth(data=detail, aes(x=G, y=score1, color='Y_1'), se=FALSE, span=1) + 
+  geom_smooth(data=detail, aes(x=G, y=D, color='D'), se=FALSE, span=1) + 
+  scale_color_manual(breaks=c("Y|D=1", "Y_1", "D"),
+                     values=c("Y|D=1"="purple", "Y_1"="green", "D"="brown")) +
+  theme(legend.title=element_blank()) +
+  ylab("transition prob") +
+  xlab("log adolescence family income") +
+  ggtitle("School transition thesis")
