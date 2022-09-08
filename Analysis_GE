@@ -3,6 +3,7 @@ rm(list=ls(all=TRUE))
 
 library("caret")
 library("nnet")
+library("gbm")
 library("xtable")
 
 options(scipen=999)
@@ -105,263 +106,304 @@ Y="adult_income_log"
 D="completion"
 G="parental_income_log"
 data=data_ge
-algorithm="ranger"
+algorithm="gbm"
 t=0.01
 Z <- c("parental_income_log","gender","medu","parental_presence",
-                "n_sib","urban","edu_exp","AFQT","age","friend_edu_exp","rotter_score","rosenberg_irt_score",
-                "sig_other_exp1","sig_other_exp2","sig_other_exp3","sig_other_exp4","foreign_lang",
-                "SMSA1","SMSA2","SMSA3","SMSA4","mother_seperate",
-                "school_satis1","school_satis2","school_satis3","fm_foreign_born",
-                "region1","region2","region3","region4","m_work","race1","race2","race3")
+       "n_sib","urban","edu_exp","AFQT","age","friend_edu_exp","rotter_score","rosenberg_irt_score",
+       "sig_other_exp1","sig_other_exp2","sig_other_exp3","sig_other_exp4","foreign_lang",
+       "SMSA1","SMSA2","SMSA3","SMSA4","mother_seperate",
+       "school_satis1","school_satis2","school_satis3","fm_foreign_born",
+       "region1","region2","region3","region4","m_work","race1","race2","race3")
 
 #############################################################################################################################################
 
 
 #############################################################################################################################################
 
-  set.seed(1)
+set.seed(1)
 
-  data$id <- 1:nrow(data)
-  
-  # estimate the nuisance functions using cross-fitting
-  sample1 <- sample(nrow(data), floor(nrow(data)/2), replace=F)
-  sample2 <- setdiff(1:nrow(data), sample1)
-  
-  YgivenDZ.Pred_D0 <- YgivenDZ.Pred_D1 <- DgivenZ.Pred <- rep(NA, nrow(data))
-  
-    if (algorithm=="nnet") {
-      message <- utils::capture.output( YgivenDZ.Model.sample1 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample1,], method="nnet",
-                                                                               preProc=c("center","scale"), trControl=caret::trainControl(method="none"), linout=TRUE,
-                                                                               tuneGrid=expand.grid(size=2,decay=0.02)) )
-      message <- utils::capture.output( YgivenDZ.Model.sample2 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample2,], method="nnet",
-                                                                               preProc=c("center","scale"), trControl=caret::trainControl(method="none"), linout=TRUE,
-                                                                               tuneGrid=expand.grid(size=2,decay=0.02)) )
-    }
-    if (algorithm=="ranger") {
-      message <- utils::capture.output( YgivenDZ.Model.sample1 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample1,], method="ranger",
-                                                                               trControl=caret::trainControl(method="cv"),
-                                                                               tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="variance",min.node.size=c(1,10,100,200,400))) )
-      message <- utils::capture.output( YgivenDZ.Model.sample2 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample2,], method="ranger",
-                                                                               trControl=caret::trainControl(method="cv"),
-                                                                               tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="variance",min.node.size=c(1,10,100,200,400))) )
-    }
-    pred_data0 <- data
-    pred_data0[,colnames(pred_data0)%in%D] <- 0
-    YgivenDZ.Pred_D0[sample1] <- stats::predict(YgivenDZ.Model.sample2, newdata = pred_data0[sample1,])
-    YgivenDZ.Pred_D0[sample2] <- stats::predict(YgivenDZ.Model.sample1, newdata = pred_data0[sample2,])
-    pred_data1 <- data
-    pred_data1[,colnames(pred_data1)%in%D] <- 1
-    YgivenDZ.Pred_D1[sample1] <- stats::predict(YgivenDZ.Model.sample2, newdata = pred_data1[sample1,])
-    YgivenDZ.Pred_D1[sample2] <- stats::predict(YgivenDZ.Model.sample1, newdata = pred_data1[sample2,])
-  
-  
-  data[,D] <- as.factor(data[,D])
-  levels(data[,D]) <- c("D0","D1")  # necessary for caret implementation of ranger
-  
-  if (algorithm=="nnet") {
-    message <- utils::capture.output( DgivenZ.Model.sample1 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample1,], method="nnet",
-                                                                            preProc=c("center","scale"), trControl=caret::trainControl(method="none"), linout=FALSE,
-                                                                            tuneGrid=expand.grid(size=2,decay=0.02)) )
-    message <- utils::capture.output( DgivenZ.Model.sample2 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample2,], method="nnet",
-                                                                            preProc=c("center","scale"), trControl=caret::trainControl(method="none"), linout=FALSE,
-                                                                            tuneGrid=expand.grid(size=2,decay=0.02)) )
-  }
-  if (algorithm=="ranger") {
-    message <- utils::capture.output( DgivenZ.Model.sample1 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample1,], method="ranger",
-                                                                            trControl=caret::trainControl(method="cv", classProbs=TRUE),
-                                                                            tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="gini",min.node.size=c(1,10,100,200,400))) )
-    message <- utils::capture.output( DgivenZ.Model.sample2 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample2,], method="ranger",
-                                                                            trControl=caret::trainControl(method="cv", classProbs=TRUE),
-                                                                            tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="gini",min.node.size=c(1,10,100,200,400))) )
-  }
-  DgivenZ.Pred[sample1] <- stats::predict(DgivenZ.Model.sample2, newdata=data[sample1,], type="prob")[,2]
-  DgivenZ.Pred[sample2] <- stats::predict(DgivenZ.Model.sample1, newdata=data[sample2,], type="prob")[,2]
-  
-  data[,D] <- as.numeric(data[,D])-1
-  
-  # the "constant" nuisances
-  DgivenZ.Pred_c <- YgivenDZ.Pred_D0_c <- YgivenDZ.Pred_D1_c <- rep(NA, nrow(data))
-  
-  DgivenZ.Pred_c[sample1] <- predict(DgivenZ.Model.sample1, newdata=data[sample1,], type="prob")[,2]
-  DgivenZ.Pred_c[sample2] <- predict(DgivenZ.Model.sample2, newdata=data[sample2,], type="prob")[,2]
-  
-    YgivenDZ.Pred_D0_c[sample1] <- predict(YgivenDZ.Model.sample1, newdata = pred_data0[sample1,])
-    YgivenDZ.Pred_D0_c[sample2] <- predict(YgivenDZ.Model.sample2, newdata = pred_data0[sample2,])
-    YgivenDZ.Pred_D1_c[sample1] <- predict(YgivenDZ.Model.sample1, newdata = pred_data1[sample1,])
-    YgivenDZ.Pred_D1_c[sample2] <- predict(YgivenDZ.Model.sample2, newdata = pred_data1[sample2,])
-  
-  YgivenDZ.Pred_D0_desc <- YgivenDZ.Pred_D1_desc <- DgivenZ.Pred_desc <- rep(NA, nrow(data))
-  
-    if (algorithm=="nnet") {
-      message <- utils::capture.output( YgivenDZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample1,], method="nnet",
-                                                                                    preProc=c("center","scale"), trControl=caret::trainControl(method="none"), linout=TRUE,
-                                                                                    tuneGrid=expand.grid(size=2,decay=0.02)) )
-      message <- utils::capture.output( YgivenDZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample2,], method="nnet",
-                                                                                    preProc=c("center","scale"), trControl=caret::trainControl(method="none"), linout=TRUE,
-                                                                                    tuneGrid=expand.grid(size=2,decay=0.02)) )
-    }
-    if (algorithm=="ranger") {
-      message <- utils::capture.output( YgivenDZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample1,], method="ranger",
-                                                                                    trControl=caret::trainControl(method="cv"),
-                                                                                    tuneGrid=expand.grid(mtry=1,splitrule="variance",min.node.size=c(1,10,100,200,400))) )
-      message <- utils::capture.output( YgivenDZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample2,], method="ranger",
-                                                                                    trControl=caret::trainControl(method="cv"),
-                                                                                    tuneGrid=expand.grid(mtry=1,splitrule="variance",min.node.size=c(1,10,100,200,400))) )
-    }
-    
-    YgivenDZ.Pred_D0_desc[sample1] <- stats::predict(YgivenDZ.Model.sample2_desc, newdata = pred_data0[sample1,])
-    YgivenDZ.Pred_D0_desc[sample2] <- stats::predict(YgivenDZ.Model.sample1_desc, newdata = pred_data0[sample2,])
-    
-    YgivenDZ.Pred_D1_desc[sample1] <- stats::predict(YgivenDZ.Model.sample2_desc, newdata = pred_data1[sample1,])
-    YgivenDZ.Pred_D1_desc[sample2] <- stats::predict(YgivenDZ.Model.sample1_desc, newdata = pred_data1[sample2,])
-  
-  data[,D] <- as.factor(data[,D])
-  levels(data[,D]) <- c("D0","D1")  # necessary for caret implementation of ranger
-  
-  if (algorithm=="nnet") {
-    message <- utils::capture.output( DgivenZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample1,], method="nnet",
-                                                                                 preProc=c("center","scale"), trControl=caret::trainControl(method="none"), linout=FALSE,
-                                                                                 tuneGrid=expand.grid(size=2,decay=0.02)) )
-    message <- utils::capture.output( DgivenZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample2,], method="nnet",
-                                                                                 preProc=c("center","scale"), trControl=caret::trainControl(method="none"), linout=FALSE,
-                                                                                 tuneGrid=expand.grid(size=2,decay=0.02)) )
-  }
-  if (algorithm=="ranger") {
-    message <- utils::capture.output( DgivenZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample1,], method="ranger",
-                                                                                 trControl=caret::trainControl(method="cv", classProbs=TRUE),
-                                                                                 tuneGrid=expand.grid(mtry=1,splitrule="gini",min.node.size=c(1,10,100,200,400))) )
-    message <- utils::capture.output( DgivenZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample2,], method="ranger",
-                                                                                 trControl=caret::trainControl(method="cv", classProbs=TRUE),
-                                                                                 tuneGrid=expand.grid(mtry=1,splitrule="gini",min.node.size=c(1,10,100,200,400))) )
-  }
-  DgivenZ.Pred_desc[sample1] <- stats::predict(DgivenZ.Model.sample2_desc, newdata=data[sample1,], type="prob")[,2]
-  DgivenZ.Pred_desc[sample2] <- stats::predict(DgivenZ.Model.sample1_desc, newdata=data[sample2,], type="prob")[,2]
-  
-  data[,D] <- as.numeric(data[,D])-1
-  
-  DgivenZ.Pred_desc_c <- YgivenDZ.Pred_D0_desc_c <- YgivenDZ.Pred_D1_desc_c <- rep(NA, nrow(data))
-  
-  DgivenZ.Pred_desc_c[sample1] <- predict(DgivenZ.Model.sample1_desc, newdata=data[sample1,], type="prob")[,2]
-  DgivenZ.Pred_desc_c[sample2] <- predict(DgivenZ.Model.sample2_desc, newdata=data[sample2,], type="prob")[,2]
-  
-    YgivenDZ.Pred_D0_desc_c[sample1] <- predict(YgivenDZ.Model.sample1_desc, newdata = pred_data0[sample1,])
-    YgivenDZ.Pred_D0_desc_c[sample2] <- predict(YgivenDZ.Model.sample2_desc, newdata = pred_data0[sample2,])
-    YgivenDZ.Pred_D1_desc_c[sample1] <- predict(YgivenDZ.Model.sample1_desc, newdata = pred_data1[sample1,])
-    YgivenDZ.Pred_D1_desc_c[sample2] <- predict(YgivenDZ.Model.sample2_desc, newdata = pred_data1[sample2,])
+data$id <- 1:nrow(data)
 
-  
-  ## I have to truncate cases with extreme propensity scores, as exact 0's do happen 
-  retain <- DgivenZ.Pred>=t & DgivenZ.Pred<=1-t & DgivenZ.Pred_c>=t & DgivenZ.Pred_c<=1-t 
-  table(retain)
-  data <- data[retain,]
-  data$id2 <- 1:nrow(data)
-  sample1 <- data$id2[data$id %in% sample1]   # new sample1 index for the remaining sample (the rows that have been in sample1)
-  sample2 <- data$id2[data$id %in% sample2]
-  
-  DgivenZ.Pred <- DgivenZ.Pred[retain]
-  DgivenZ.Pred_c <- DgivenZ.Pred_c[retain]
-  YgivenDZ.Pred_D0 <- YgivenDZ.Pred_D0[retain]
-  YgivenDZ.Pred_D0_c <- YgivenDZ.Pred_D0_c[retain]
-  YgivenDZ.Pred_D1 <- YgivenDZ.Pred_D1[retain]
-  YgivenDZ.Pred_D1_c <- YgivenDZ.Pred_D1_c[retain]
-  
-  DgivenZ.Pred_desc <- DgivenZ.Pred_desc[retain]
-  DgivenZ.Pred_desc_c <- DgivenZ.Pred_desc_c[retain]
-  YgivenDZ.Pred_D0_desc <- YgivenDZ.Pred_D0_desc[retain]
-  YgivenDZ.Pred_D0_desc_c <- YgivenDZ.Pred_D0_desc_c[retain]
-  YgivenDZ.Pred_D1_desc <- YgivenDZ.Pred_D1_desc[retain]
-  YgivenDZ.Pred_D1_desc_c <- YgivenDZ.Pred_D1_desc_c[retain]
-  
-  # denominators for stabilizing weights
-  stab0 <- NA
-  stab0[sample1] <- mean(((1-data[,D])/(1-DgivenZ.Pred))[sample1])
-  stab0[sample2] <- mean(((1-data[,D])/(1-DgivenZ.Pred))[sample2])
-  stab1 <- NA
-  stab1[sample1] <- mean((data[,D]/DgivenZ.Pred)[sample1])
-  stab1[sample2] <- mean((data[,D]/DgivenZ.Pred)[sample2])
-  
-  stab0_s1_c <- mean(((1-data[,D])/(1-DgivenZ.Pred_c))[sample1])
-  stab0_s2_c <- mean(((1-data[,D])/(1-DgivenZ.Pred_c))[sample2])
-  stab1_s1_c <- mean((data[,D]/DgivenZ.Pred_c)[sample1])
-  stab1_s2_c <- mean((data[,D]/DgivenZ.Pred_c)[sample2])
-  
-  E_YgivenDZ.Pred_D0 <- E_YgivenDZ.Pred_D1 <- E_G <- rep(NA, nrow(data))
-  
-  E_YgivenDZ.Pred_D0[sample1] <- mean( ( ((1-data[,D])/(1-DgivenZ.Pred_c))/stab0_s2_c*(data[,Y]-YgivenDZ.Pred_D0_c) + YgivenDZ.Pred_D0_c)[sample2] )
-  E_YgivenDZ.Pred_D0[sample2] <- mean( ( ((1-data[,D])/(1-DgivenZ.Pred_c))/stab0_s1_c*(data[,Y]-YgivenDZ.Pred_D0_c) + YgivenDZ.Pred_D0_c)[sample1] )
-  E_YgivenDZ.Pred_D1[sample1] <- mean( ( (data[,D]/DgivenZ.Pred_c)/stab1_s2_c*(data[,Y]-YgivenDZ.Pred_D1_c) + YgivenDZ.Pred_D1_c)[sample2] )
-  E_YgivenDZ.Pred_D1[sample2] <- mean( ( (data[,D]/DgivenZ.Pred_c)/stab1_s1_c*(data[,Y]-YgivenDZ.Pred_D1_c) + YgivenDZ.Pred_D1_c)[sample1] )
-  
-  E_G[sample1] <- mean(data[sample2,G])
-  E_G[sample2] <- mean(data[sample1,G])
-  
-  stab0_desc <- NA
-  stab0_desc[sample1] <- mean(((1-data[,D])/(1-DgivenZ.Pred_desc))[sample1])
-  stab0_desc[sample2] <- mean(((1-data[,D])/(1-DgivenZ.Pred_desc))[sample2])
-  stab1_desc <- NA
-  stab1_desc[sample1] <- mean((data[,D]/DgivenZ.Pred_desc)[sample1])
-  stab1_desc[sample2] <- mean((data[,D]/DgivenZ.Pred_desc)[sample2])
-  
-  stab0_desc_s1_c <- mean(((1-data[,D])/(1-DgivenZ.Pred_desc_c))[sample1])
-  stab0_desc_s2_c <- mean(((1-data[,D])/(1-DgivenZ.Pred_desc_c))[sample2])
-  stab1_desc_s1_c <- mean((data[,D]/DgivenZ.Pred_desc_c)[sample1])
-  stab1_desc_s2_c <- mean((data[,D]/DgivenZ.Pred_desc_c)[sample2])
-  
-  E_YgivenDZ.Pred_D0_desc <- E_YgivenDZ.Pred_D1_desc <- rep(NA, nrow(data))
-  
-  E_YgivenDZ.Pred_D0_desc[sample1] <- mean( ( ((1-data[,D])/(1-DgivenZ.Pred_desc_c))/stab0_desc_s2_c*(data[,Y]-YgivenDZ.Pred_D0_c) + YgivenDZ.Pred_D0_c)[sample2] )
-  E_YgivenDZ.Pred_D0_desc[sample2] <- mean( ( ((1-data[,D])/(1-DgivenZ.Pred_desc_c))/stab0_desc_s1_c*(data[,Y]-YgivenDZ.Pred_D0_c) + YgivenDZ.Pred_D0_c)[sample1] )
-  E_YgivenDZ.Pred_D1_desc[sample1] <- mean( ( (data[,D]/DgivenZ.Pred_desc_c)/stab1_desc_s2_c*(data[,Y]-YgivenDZ.Pred_D1_c) + YgivenDZ.Pred_D1_c)[sample2] )
-  E_YgivenDZ.Pred_D1_desc[sample2] <- mean( ( (data[,D]/DgivenZ.Pred_desc_c)/stab1_desc_s1_c*(data[,Y]-YgivenDZ.Pred_D1_c) + YgivenDZ.Pred_D1_c)[sample1] )
-  
-  # decentered EIFs
-  eif_d1 <- ( (data[,D]/DgivenZ.Pred)/stab1*(data[,Y]-YgivenDZ.Pred_D1) + YgivenDZ.Pred_D1-E_YgivenDZ.Pred_D1 )*( data[,G]-E_G )
-  eif_d0 <- ( ((1-data[,D])/(1-DgivenZ.Pred))/stab0*(data[,Y]-YgivenDZ.Pred_D0) + YgivenDZ.Pred_D0-E_YgivenDZ.Pred_D0 )*( data[,G]-E_G )
-  
-  cov_d1 <-  mean(eif_d1)      
-  cov_d0 <-  mean(eif_d0)      
-  cov_d1_d0_diff <- cov_d1-cov_d0
-  
-  cov_d1_sd <- sqrt( (1/nrow(data)) * mean((eif_d1-cov_d1)^2) )
-  cov_d0_sd <- sqrt( (1/nrow(data)) * mean((eif_d0-cov_d0)^2) )
-  cov_d1_d0_diff_sd <- sqrt((1/nrow(data)) * mean((eif_d1-eif_d0-cov_d1_d0_diff)^2)) 
-  
-  score0 <- ((1-data[,D])/(1-DgivenZ.Pred))/stab0*(data[,Y]-YgivenDZ.Pred_D0) + YgivenDZ.Pred_D0
-  score1 <- (data[,D]/DgivenZ.Pred)/stab1*(data[,Y]-YgivenDZ.Pred_D1) + YgivenDZ.Pred_D1
-  
-  eif_d1_desc <- ( (data[,D]/DgivenZ.Pred_desc)/stab1_desc*(data[,Y]-YgivenDZ.Pred_D1_desc) + YgivenDZ.Pred_D1_desc-E_YgivenDZ.Pred_D1_desc )*( data[,G]-E_G )
-  eif_d0_desc <- ( ((1-data[,D])/(1-DgivenZ.Pred_desc))/stab0_desc*(data[,Y]-YgivenDZ.Pred_D0_desc) + YgivenDZ.Pred_D0_desc-E_YgivenDZ.Pred_D0_desc )*( data[,G]-E_G )
-  
-  cov_d1_desc <-  mean(eif_d1_desc)      
-  cov_d0_desc <-  mean(eif_d0_desc)      
-  cov_d1_d0_diff_desc <- cov_d1_desc-cov_d0_desc
-  
-  cov_d1_sd_desc <- sqrt( (1/nrow(data)) * mean((eif_d1_desc-cov_d1_desc)^2) )
-  cov_d0_sd_desc <- sqrt( (1/nrow(data)) * mean((eif_d0_desc-cov_d0_desc)^2) )
-  cov_d1_d0_diff_sd_desc <- sqrt((1/nrow(data)) * mean((eif_d1_desc-eif_d0_desc-cov_d1_d0_diff_desc)^2)) 
-  
-  score0_desc <- ((1-data[,D])/(1-DgivenZ.Pred_desc))/stab0_desc*(data[,Y]-YgivenDZ.Pred_D0_desc) + YgivenDZ.Pred_D0_desc
-  score1_desc <- (data[,D]/DgivenZ.Pred_desc)/stab1_desc*(data[,Y]-YgivenDZ.Pred_D1_desc) + YgivenDZ.Pred_D1_desc
-  
-  detail <- data.frame(score0=score0, score1=score1, score0_desc=score0_desc, score1_desc=score1_desc, G=data[,G], Y=data[,Y], D=data[,D])
-  
-  overall <- data.frame(item=c("cov_d1_desc","cov_d0_desc","cov_d1_d0_diff_desc","cov_d1","cov_d0","cov_d1_d0_diff"),
-                     point=c(cov_d1_desc,cov_d0_desc,cov_d1_d0_diff_desc,cov_d1,cov_d0,cov_d1_d0_diff),
-                     sd=c(cov_d1_sd_desc,cov_d0_sd_desc,cov_d1_d0_diff_sd_desc,cov_d1_sd,cov_d0_sd,cov_d1_d0_diff_sd))
-  overall$CI_lower <- overall$point - qnorm(0.975)*overall$sd 
-  overall$CI_higher <- overall$point + qnorm(0.975)*overall$sd 
-  overall$pvalues <- 1-abs(pnorm(overall$point/overall$sd)-0.5)*2
-  
-ggplot(detail, aes(x=G, y=Y)) +
-  geom_smooth(data=detail, aes(x=G, y=score1_desc, color='desc1'), se=FALSE, span=0.1) +
-  geom_smooth(data=detail, aes(x=G, y=score0_desc, color='desc0'), se=FALSE, span=0.1) + 
-  geom_smooth(data=detail, aes(x=G, y=score1, color='score1'), se=FALSE, span=0.1) + 
-  geom_smooth(data=detail, aes(x=G, y=score0, color='score0'), se=FALSE, span=0.1) + 
-  scale_color_manual(breaks=c("desc1", "desc0", "score1", "score0"),
-                     values=c("desc1"="green", "desc0"="purple", "score1"="red", "score0"="blue")) +
-  theme(legend.title=element_blank()) 
-  
+# estimate the nuisance functions using cross-fitting
+sample1 <- sample(nrow(data), floor(nrow(data)/2), replace=F)
+sample2 <- setdiff(1:nrow(data), sample1)
+
+YgivenDZ.Pred_D0 <- YgivenDZ.Pred_D1 <- DgivenZ.Pred <- rep(NA, nrow(data))
+
+if (algorithm=="nnet") {
+  message <- utils::capture.output( YgivenDZ.Model.sample1 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample1,], method="nnet",
+                                                                           preProc=c("center","scale"), trControl=caret::trainControl(method="cv"), linout=TRUE,
+                                                                           tuneGrid=expand.grid(size=c(1,2),decay=c(0,0.1,0.2)) ))
+  message <- utils::capture.output( YgivenDZ.Model.sample2 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample2,], method="nnet",
+                                                                           preProc=c("center","scale"), trControl=caret::trainControl(method="cv"), linout=TRUE,
+                                                                           tuneGrid=expand.grid(size=c(1,2),decay=c(0,0.1,0.2)) ))
+}
+if (algorithm=="ranger") {
+  message <- utils::capture.output( YgivenDZ.Model.sample1 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample1,], method="ranger",
+                                                                           trControl=caret::trainControl(method="cv"),
+                                                                           tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="variance",min.node.size=c(1,10,100,200,400))) )
+  message <- utils::capture.output( YgivenDZ.Model.sample2 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample2,], method="ranger",
+                                                                           trControl=caret::trainControl(method="cv"),
+                                                                           tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="variance",min.node.size=c(1,10,100,200,400))) )
+}
+if (algorithm=="gbm") {
+  message <- utils::capture.output( YgivenDZ.Model.sample1 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample1,], method="gbm",
+                                                                           trControl=caret::trainControl(method="cv"), 
+                                                                           tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) ) 
+  message <- utils::capture.output( YgivenDZ.Model.sample2 <- caret::train(stats::as.formula(paste(Y, paste(D,paste(Z,collapse="+"),sep="+"), sep="~")), data=data[sample2,], method="gbm",
+                                                                           trControl=caret::trainControl(method="cv"), 
+                                                                           tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) ) 
+}
+
+
+pred_data0 <- data
+pred_data0[,colnames(pred_data0)%in%D] <- 0
+YgivenDZ.Pred_D0[sample1] <- stats::predict(YgivenDZ.Model.sample2, newdata = pred_data0[sample1,])
+YgivenDZ.Pred_D0[sample2] <- stats::predict(YgivenDZ.Model.sample1, newdata = pred_data0[sample2,])
+pred_data1 <- data
+pred_data1[,colnames(pred_data1)%in%D] <- 1
+YgivenDZ.Pred_D1[sample1] <- stats::predict(YgivenDZ.Model.sample2, newdata = pred_data1[sample1,])
+YgivenDZ.Pred_D1[sample2] <- stats::predict(YgivenDZ.Model.sample1, newdata = pred_data1[sample2,])
+
+
+data[,D] <- as.factor(data[,D])
+levels(data[,D]) <- c("D0","D1")  # necessary for caret implementation of ranger
+
+if (algorithm=="nnet") {
+  message <- utils::capture.output( DgivenZ.Model.sample1 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample1,], method="nnet",
+                                                                          preProc=c("center","scale"), trControl=caret::trainControl(method="cv"), linout=FALSE,
+                                                                          tuneGrid=expand.grid(size=c(1,2),decay=c(0,0.1,0.2)) ))
+  message <- utils::capture.output( DgivenZ.Model.sample2 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample2,], method="nnet",
+                                                                          preProc=c("center","scale"), trControl=caret::trainControl(method="cv"), linout=FALSE,
+                                                                          tuneGrid=expand.grid(size=c(1,2),decay=c(0,0.1,0.2)) ))
+}
+if (algorithm=="ranger") {
+  message <- utils::capture.output( DgivenZ.Model.sample1 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample1,], method="ranger",
+                                                                          trControl=caret::trainControl(method="cv", classProbs=TRUE),
+                                                                          tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="gini",min.node.size=c(1,10,100,200,400))) )
+  message <- utils::capture.output( DgivenZ.Model.sample2 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample2,], method="ranger",
+                                                                          trControl=caret::trainControl(method="cv", classProbs=TRUE),
+                                                                          tuneGrid=expand.grid(mtry=floor(sqrt(length(Z))),splitrule="gini",min.node.size=c(1,10,100,200,400))) )
+}
+if (algorithm=="gbm") {
+  message <- utils::capture.output( DgivenZ.Model.sample1 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample1,], method="gbm",
+                                                                          trControl=caret::trainControl(method="cv"), 
+                                                                          tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+  message <- utils::capture.output( DgivenZ.Model.sample2 <- caret::train(stats::as.formula(paste(D, paste(Z,collapse="+"), sep="~")), data=data[sample2,], method="gbm",
+                                                                          trControl=caret::trainControl(method="cv"), 
+                                                                          tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+}
+
+DgivenZ.Pred[sample1] <- stats::predict(DgivenZ.Model.sample2, newdata=data[sample1,], type="prob")[,2]
+DgivenZ.Pred[sample2] <- stats::predict(DgivenZ.Model.sample1, newdata=data[sample2,], type="prob")[,2]
+
+data[,D] <- as.numeric(data[,D])-1
+
+# the "constant" nuisances
+DgivenZ.Pred_c <- YgivenDZ.Pred_D0_c <- YgivenDZ.Pred_D1_c <- rep(NA, nrow(data))
+
+DgivenZ.Pred_c[sample1] <- predict(DgivenZ.Model.sample1, newdata=data[sample1,], type="prob")[,2]
+DgivenZ.Pred_c[sample2] <- predict(DgivenZ.Model.sample2, newdata=data[sample2,], type="prob")[,2]
+
+YgivenDZ.Pred_D0_c[sample1] <- predict(YgivenDZ.Model.sample1, newdata = pred_data0[sample1,])
+YgivenDZ.Pred_D0_c[sample2] <- predict(YgivenDZ.Model.sample2, newdata = pred_data0[sample2,])
+YgivenDZ.Pred_D1_c[sample1] <- predict(YgivenDZ.Model.sample1, newdata = pred_data1[sample1,])
+YgivenDZ.Pred_D1_c[sample2] <- predict(YgivenDZ.Model.sample2, newdata = pred_data1[sample2,])
+
+YgivenDZ.Pred_D0_desc <- YgivenDZ.Pred_D1_desc <- DgivenZ.Pred_desc <- rep(NA, nrow(data))
+
+if (algorithm=="nnet") {
+  message <- utils::capture.output( YgivenDZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample1,], method="nnet",
+                                                                                preProc=c("center","scale"), trControl=caret::trainControl(method="cv"), linout=TRUE,
+                                                                                tuneGrid=expand.grid(size=c(1,2),decay=c(0,0.1,0.2)) ))
+  message <- utils::capture.output( YgivenDZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample2,], method="nnet",
+                                                                                preProc=c("center","scale"), trControl=caret::trainControl(method="cv"), linout=TRUE,
+                                                                                tuneGrid=expand.grid(size=c(1,2),decay=c(0,0.1,0.2)) ))
+}
+if (algorithm=="ranger") {
+  message <- utils::capture.output( YgivenDZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample1,], method="ranger",
+                                                                                trControl=caret::trainControl(method="cv"),
+                                                                                tuneGrid=expand.grid(mtry=1,splitrule="variance",min.node.size=c(1,10,100,200,400))) )
+  message <- utils::capture.output( YgivenDZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample2,], method="ranger",
+                                                                                trControl=caret::trainControl(method="cv"),
+                                                                                tuneGrid=expand.grid(mtry=1,splitrule="variance",min.node.size=c(1,10,100,200,400))) )
+}
+if (algorithm=="gbm") {
+  message <- utils::capture.output( YgivenDZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample1,], method="gbm",
+                                                                                trControl=caret::trainControl(method="cv"),
+                                                                                tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+  message <- utils::capture.output( YgivenDZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(Y, paste(D,G,sep="+"), sep="~")), data=data[sample2,], method="gbm",
+                                                                                trControl=caret::trainControl(method="cv"),
+                                                                                tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+}
+
+YgivenDZ.Pred_D0_desc[sample1] <- stats::predict(YgivenDZ.Model.sample2_desc, newdata = pred_data0[sample1,])
+YgivenDZ.Pred_D0_desc[sample2] <- stats::predict(YgivenDZ.Model.sample1_desc, newdata = pred_data0[sample2,])
+
+YgivenDZ.Pred_D1_desc[sample1] <- stats::predict(YgivenDZ.Model.sample2_desc, newdata = pred_data1[sample1,])
+YgivenDZ.Pred_D1_desc[sample2] <- stats::predict(YgivenDZ.Model.sample1_desc, newdata = pred_data1[sample2,])
+
+data[,D] <- as.factor(data[,D])
+levels(data[,D]) <- c("D0","D1")  # necessary for caret implementation of ranger
+
+if (algorithm=="nnet") {
+  message <- utils::capture.output( DgivenZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample1,], method="nnet",
+                                                                               preProc=c("center","scale"), trControl=caret::trainControl(method="cv"), linout=FALSE,
+                                                                               tuneGrid=expand.grid(size=c(1,2),decay=c(0,0.1,0.2)) ))
+  message <- utils::capture.output( DgivenZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample2,], method="nnet",
+                                                                               preProc=c("center","scale"), trControl=caret::trainControl(method="cv"), linout=FALSE,
+                                                                               tuneGrid=expand.grid(size=c(1,2),decay=c(0,0.1,0.2)) ))
+}
+if (algorithm=="ranger") {
+  message <- utils::capture.output( DgivenZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample1,], method="ranger",
+                                                                               trControl=caret::trainControl(method="cv", classProbs=TRUE),
+                                                                               tuneGrid=expand.grid(mtry=1,splitrule="gini",min.node.size=c(1,10,100,200,400))) )
+  message <- utils::capture.output( DgivenZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample2,], method="ranger",
+                                                                               trControl=caret::trainControl(method="cv", classProbs=TRUE),
+                                                                               tuneGrid=expand.grid(mtry=1,splitrule="gini",min.node.size=c(1,10,100,200,400))) )
+}
+if (algorithm=="gbm") {
+  message <- utils::capture.output( DgivenZ.Model.sample1_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample1,], method="gbm",
+                                                                               trControl=caret::trainControl(method="cv", classProbs=TRUE),
+                                                                               tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+  message <- utils::capture.output( DgivenZ.Model.sample2_desc <- caret::train(stats::as.formula(paste(D, G, sep="~")), data=data[sample2,], method="gbm",
+                                                                               trControl=caret::trainControl(method="cv", classProbs=TRUE),
+                                                                               tuneGrid=expand.grid(n.trees=c(50,100,150), interaction.depth=c(2,3), shrinkage=0.1, n.minobsinnode=c(10,100,200))) )
+}
+DgivenZ.Pred_desc[sample1] <- stats::predict(DgivenZ.Model.sample2_desc, newdata=data[sample1,], type="prob")[,2]
+DgivenZ.Pred_desc[sample2] <- stats::predict(DgivenZ.Model.sample1_desc, newdata=data[sample2,], type="prob")[,2]
+
+data[,D] <- as.numeric(data[,D])-1
+
+DgivenZ.Pred_desc_c <- YgivenDZ.Pred_D0_desc_c <- YgivenDZ.Pred_D1_desc_c <- rep(NA, nrow(data))
+
+DgivenZ.Pred_desc_c[sample1] <- predict(DgivenZ.Model.sample1_desc, newdata=data[sample1,], type="prob")[,2]
+DgivenZ.Pred_desc_c[sample2] <- predict(DgivenZ.Model.sample2_desc, newdata=data[sample2,], type="prob")[,2]
+
+YgivenDZ.Pred_D0_desc_c[sample1] <- predict(YgivenDZ.Model.sample1_desc, newdata = pred_data0[sample1,])
+YgivenDZ.Pred_D0_desc_c[sample2] <- predict(YgivenDZ.Model.sample2_desc, newdata = pred_data0[sample2,])
+YgivenDZ.Pred_D1_desc_c[sample1] <- predict(YgivenDZ.Model.sample1_desc, newdata = pred_data1[sample1,])
+YgivenDZ.Pred_D1_desc_c[sample2] <- predict(YgivenDZ.Model.sample2_desc, newdata = pred_data1[sample2,])
+
+# denominators for stabilizing weights
+stab0 <- NA
+stab0[sample1] <- mean(((1-data[,D])/(1-DgivenZ.Pred))[sample1])
+stab0[sample2] <- mean(((1-data[,D])/(1-DgivenZ.Pred))[sample2])
+stab1 <- NA
+stab1[sample1] <- mean((data[,D]/DgivenZ.Pred)[sample1])
+stab1[sample2] <- mean((data[,D]/DgivenZ.Pred)[sample2])
+
+stab0_s1_c <- mean(((1-data[,D])/(1-DgivenZ.Pred_c))[sample1])
+stab0_s2_c <- mean(((1-data[,D])/(1-DgivenZ.Pred_c))[sample2])
+stab1_s1_c <- mean((data[,D]/DgivenZ.Pred_c)[sample1])
+stab1_s2_c <- mean((data[,D]/DgivenZ.Pred_c)[sample2])
+
+E_YgivenDZ.Pred_D0 <- E_YgivenDZ.Pred_D1 <- E_G <- rep(NA, nrow(data))
+
+E_YgivenDZ.Pred_D0[sample1] <- mean( ( ((1-data[,D])/(1-DgivenZ.Pred_c))/stab0_s2_c*(data[,Y]-YgivenDZ.Pred_D0_c) + YgivenDZ.Pred_D0_c)[sample2] )
+E_YgivenDZ.Pred_D0[sample2] <- mean( ( ((1-data[,D])/(1-DgivenZ.Pred_c))/stab0_s1_c*(data[,Y]-YgivenDZ.Pred_D0_c) + YgivenDZ.Pred_D0_c)[sample1] )
+E_YgivenDZ.Pred_D1[sample1] <- mean( ( (data[,D]/DgivenZ.Pred_c)/stab1_s2_c*(data[,Y]-YgivenDZ.Pred_D1_c) + YgivenDZ.Pred_D1_c)[sample2] )
+E_YgivenDZ.Pred_D1[sample2] <- mean( ( (data[,D]/DgivenZ.Pred_c)/stab1_s1_c*(data[,Y]-YgivenDZ.Pred_D1_c) + YgivenDZ.Pred_D1_c)[sample1] )
+
+E_G[sample1] <- mean(data[sample2,G])
+E_G[sample2] <- mean(data[sample1,G])
+
+stab0_desc <- NA
+stab0_desc[sample1] <- mean(((1-data[,D])/(1-DgivenZ.Pred_desc))[sample1])
+stab0_desc[sample2] <- mean(((1-data[,D])/(1-DgivenZ.Pred_desc))[sample2])
+stab1_desc <- NA
+stab1_desc[sample1] <- mean((data[,D]/DgivenZ.Pred_desc)[sample1])
+stab1_desc[sample2] <- mean((data[,D]/DgivenZ.Pred_desc)[sample2])
+
+stab0_desc_s1_c <- mean(((1-data[,D])/(1-DgivenZ.Pred_desc_c))[sample1])
+stab0_desc_s2_c <- mean(((1-data[,D])/(1-DgivenZ.Pred_desc_c))[sample2])
+stab1_desc_s1_c <- mean((data[,D]/DgivenZ.Pred_desc_c)[sample1])
+stab1_desc_s2_c <- mean((data[,D]/DgivenZ.Pred_desc_c)[sample2])
+
+E_YgivenDZ.Pred_D0_desc <- E_YgivenDZ.Pred_D1_desc <- rep(NA, nrow(data))
+
+E_YgivenDZ.Pred_D0_desc[sample1] <- mean( ( ((1-data[,D])/(1-DgivenZ.Pred_desc_c))/stab0_desc_s2_c*(data[,Y]-YgivenDZ.Pred_D0_c) + YgivenDZ.Pred_D0_c)[sample2] )
+E_YgivenDZ.Pred_D0_desc[sample2] <- mean( ( ((1-data[,D])/(1-DgivenZ.Pred_desc_c))/stab0_desc_s1_c*(data[,Y]-YgivenDZ.Pred_D0_c) + YgivenDZ.Pred_D0_c)[sample1] )
+E_YgivenDZ.Pred_D1_desc[sample1] <- mean( ( (data[,D]/DgivenZ.Pred_desc_c)/stab1_desc_s2_c*(data[,Y]-YgivenDZ.Pred_D1_c) + YgivenDZ.Pred_D1_c)[sample2] )
+E_YgivenDZ.Pred_D1_desc[sample2] <- mean( ( (data[,D]/DgivenZ.Pred_desc_c)/stab1_desc_s1_c*(data[,Y]-YgivenDZ.Pred_D1_c) + YgivenDZ.Pred_D1_c)[sample1] )
+
+# decentered EIFs
+eif_d1 <- ( (data[,D]/DgivenZ.Pred)/stab1*(data[,Y]-YgivenDZ.Pred_D1) + YgivenDZ.Pred_D1-E_YgivenDZ.Pred_D1 )*( data[,G]-E_G )
+eif_d0 <- ( ((1-data[,D])/(1-DgivenZ.Pred))/stab0*(data[,Y]-YgivenDZ.Pred_D0) + YgivenDZ.Pred_D0-E_YgivenDZ.Pred_D0 )*( data[,G]-E_G )
+
+cov_d1 <-  mean(eif_d1)      
+cov_d0 <-  mean(eif_d0)      
+cov_d1_d0_diff <- cov_d1-cov_d0
+
+cov_d1_sd <- sqrt( (1/nrow(data)) * mean((eif_d1-cov_d1)^2) )
+cov_d0_sd <- sqrt( (1/nrow(data)) * mean((eif_d0-cov_d0)^2) )
+cov_d1_d0_diff_sd <- sqrt((1/nrow(data)) * mean((eif_d1-eif_d0-cov_d1_d0_diff)^2)) 
+
+score0 <- ((1-data[,D])/(1-DgivenZ.Pred))/stab0*(data[,Y]-YgivenDZ.Pred_D0) + YgivenDZ.Pred_D0
+score1 <- (data[,D]/DgivenZ.Pred)/stab1*(data[,Y]-YgivenDZ.Pred_D1) + YgivenDZ.Pred_D1
+
+eif_d1_desc <- ( (data[,D]/DgivenZ.Pred_desc)/stab1_desc*(data[,Y]-YgivenDZ.Pred_D1_desc) + YgivenDZ.Pred_D1_desc-E_YgivenDZ.Pred_D1_desc )*( data[,G]-E_G )
+eif_d0_desc <- ( ((1-data[,D])/(1-DgivenZ.Pred_desc))/stab0_desc*(data[,Y]-YgivenDZ.Pred_D0_desc) + YgivenDZ.Pred_D0_desc-E_YgivenDZ.Pred_D0_desc )*( data[,G]-E_G )
+
+cov_d1_desc <-  mean(eif_d1_desc)      
+cov_d0_desc <-  mean(eif_d0_desc)      
+cov_d1_d0_diff_desc <- cov_d1_desc-cov_d0_desc
+
+cov_d1_sd_desc <- sqrt( (1/nrow(data)) * mean((eif_d1_desc-cov_d1_desc)^2) )
+cov_d0_sd_desc <- sqrt( (1/nrow(data)) * mean((eif_d0_desc-cov_d0_desc)^2) )
+cov_d1_d0_diff_sd_desc <- sqrt((1/nrow(data)) * mean((eif_d1_desc-eif_d0_desc-cov_d1_d0_diff_desc)^2)) 
+
+score0_desc <- ((1-data[,D])/(1-DgivenZ.Pred_desc))/stab0_desc*(data[,Y]-YgivenDZ.Pred_D0_desc) + YgivenDZ.Pred_D0_desc
+score1_desc <- (data[,D]/DgivenZ.Pred_desc)/stab1_desc*(data[,Y]-YgivenDZ.Pred_D1_desc) + YgivenDZ.Pred_D1_desc
+
+detail <- data.frame(score0=score0, score1=score1, score0_desc=score0_desc, score1_desc=score1_desc, G=data[,G], Y=data[,Y], D=data[,D])
+
+overall <- data.frame(item=c("cov_d1_desc","cov_d0_desc","cov_d1_d0_diff_desc","cov_d1","cov_d0","cov_d1_d0_diff"),
+                      point=c(cov_d1_desc,cov_d0_desc,cov_d1_d0_diff_desc,cov_d1,cov_d0,cov_d1_d0_diff),
+                      sd=c(cov_d1_sd_desc,cov_d0_sd_desc,cov_d1_d0_diff_sd_desc,cov_d1_sd,cov_d0_sd,cov_d1_d0_diff_sd))
+overall$CI_lower <- overall$point - qnorm(0.975)*overall$sd 
+overall$CI_higher <- overall$point + qnorm(0.975)*overall$sd 
+overall$pvalues <- 1-abs(pnorm(overall$point/overall$sd)-0.5)*2
+
 overall
 
+ggplot(detail, aes(x=G, y=Y)) +
+  geom_smooth(data=detail, aes(x=G, y=score1_desc, color='factual | col'), se=FALSE, span=0.1) +
+  geom_smooth(data=detail, aes(x=G, y=score0_desc, color='factual | nocol'), se=FALSE, span=0.1) + 
+  geom_smooth(data=detail, aes(x=G, y=score1, color='counter_col'), se=FALSE, span=0.1) + 
+  geom_smooth(data=detail, aes(x=G, y=score0, color='counter_nocol'), se=FALSE, span=0.1) + 
+  scale_color_manual(breaks=c("factual | col", "factual | nocol", "counter_col", "counter_nocol"),
+                     values=c("factual | col"="purple", "factual | nocol"="brown", "counter_col"="green", "counter_nocol"="red")) +
+  theme(legend.title=element_blank()) +
+  ylab("log adult family income") +
+  xlab("log adolescence family income") +
+  ggtitle("Great equalizer thesis") +
+  theme(plot.title=element_text(size=17)) +
+  theme(legend.text=element_text(size=14)) +
+  theme(axis.title=element_text(size=14)) 
 
+ggplot(detail, aes(x=G, y=Y)) +
+  geom_smooth(data=detail, aes(x=G, y=score1_desc, color='factual | col'), se=FALSE, span=0.1) +
+  geom_smooth(data=detail, aes(x=G, y=score0_desc, color='factual | nocol'), se=FALSE, span=0.1) + 
+  scale_color_manual(breaks=c("factual | col", "factual | nocol"),
+                     values=c("factual | col"="purple", "factual | nocol"="brown")) +
+  theme(legend.title=element_blank()) +
+  ylab("log adult family income") +
+  xlab("log adolescence family income") +
+  ggtitle("GE:factual") +
+  theme(plot.title=element_text(size=17)) +
+  theme(legend.text=element_text(size=14)) +
+  theme(axis.title=element_text(size=14)) 
 
+ggplot(detail, aes(x=G, y=Y)) +
+  geom_smooth(data=detail, aes(x=G, y=score1, color='counter_col'), se=FALSE, span=0.1) + 
+  geom_smooth(data=detail, aes(x=G, y=score0, color='counter_nocol'), se=FALSE, span=0.1) + 
+  scale_color_manual(breaks=c("counter_col", "counter_nocol"),
+                     values=c("counter_col"="green", "counter_nocol"="red")) +
+  theme(legend.title=element_blank()) +
+  ylab("log adult family income") +
+  xlab("log adolescence family income") +
+  ggtitle("GE: counterfactual") +
+  theme(plot.title=element_text(size=17)) +
+  theme(legend.text=element_text(size=14)) +
+  theme(axis.title=element_text(size=14)) 
